@@ -3,3 +3,4 @@
 Pipfile
 .python-version
 .ipynb_checkpoints
+Pipfile.lock
