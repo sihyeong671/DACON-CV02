@@ -1,0 +1,5 @@
+/data
+.vscode
+Pipfile
+.python-version
+.ipynb_checkpoints
