@@ -5,3 +5,4 @@ Pipfile
 .ipynb_checkpoints
 Pipfile.lock
 .DS_Store
+/model/*.tar
