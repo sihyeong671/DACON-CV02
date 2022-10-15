@@ -6,3 +6,4 @@ Pipfile
 Pipfile.lock
 .DS_Store
 /model/*.tar
+open.zip
