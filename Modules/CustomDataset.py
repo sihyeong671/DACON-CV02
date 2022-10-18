@@ -21,7 +21,7 @@ class CustomDataset(Dataset):
         if(self.labels is not None):
             label = self.labels[index]
         else:
-            label = None
+            label = 'None'
         return {'image' : img, 'height' : h, 'width' : w, 'channel' : c, 'label' : label}
     
     def __len__(self):

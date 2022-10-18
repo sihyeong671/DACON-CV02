@@ -7,3 +7,6 @@ Pipfile.lock
 .DS_Store
 /model/*.tar
 open.zip
+*.csv
+*.tar
+*/__pycache__/*
