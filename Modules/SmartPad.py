@@ -1,5 +1,6 @@
 from albumentations import ImageOnlyTransform
 import albumentations as A
+import cv2
 
 
 class SmartPad(ImageOnlyTransform):
@@ -11,5 +12,12 @@ class SmartPad(ImageOnlyTransform):
     
     def apply(self, img, **params):
         length = max(img.shape[0], img.shape[1]) 
-        img = A.PadIfNeeded(min_height=length, min_width=length, always_apply=self.always_apply, p = self.p)(image=img)['image']
+        img = A.PadIfNeeded(
+            min_height=length,
+            min_width=length, 
+            always_apply=self.always_apply,
+            # border_mode=cv2.BORDER_CONSTANT,
+            # value=0,
+            p = self.p,
+            )(image=img)['image']
         return img
