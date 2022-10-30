@@ -42,3 +42,17 @@ def inference(model, test_loader, device):
     
     print('Done.')
     return model_preds
+
+
+def saveModel(model, optimizer, args, datetime, path):
+    torch.save({
+        'model': model.state_dict(),
+        'optim': optimizer.state_dict(),
+        'args': args,
+        'save_time': datetime,
+    }, path)
+
+
+def loadModel(path: str):
+    obj = torch.load(path)
+    return obj['model'], obj['optim'], obj['args'], obj['save_time']
