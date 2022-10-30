@@ -102,7 +102,7 @@ if __name__ == '__main__':
     parser.add_argument('--validation_ratio', type=float, default=0.2)
     parser.add_argument('--step_size', type=int, default=5)
     parser.add_argument('--step_gamma', type=float, default=0.8)
-    parser.add_argument('--lr', type=float, default=4e-3)
+    parser.add_argument('--lr', type=float, default=4e-4)
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--seed', type=int, default=41)
     parser.add_argument('--img_size', type=int, default=244)
