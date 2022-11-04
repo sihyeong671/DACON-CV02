@@ -58,9 +58,10 @@ def validation(model, criterion, test_loader, device):
             img, label = img.float().to(device), label.to(device)
 
             size = size.float().to(device)
-            model_pred = model(img, size)
-            # model_pred = model(img)
+            rgb_mean = torch.mean(img, dim=(-2, -1))
+            model_pred = model(img, size, rgb_mean)
             
+
             loss = criterion(model_pred, label)
             
             val_loss.append(loss.item())
@@ -189,7 +190,7 @@ class FocalLoss(nn.Module):
 
 def save_model(model_param, path: str):
 
-    version = 'v' + len(glob(path+'_*'))+1
+    version = 'v' + f'{len(glob(path+"_*"))+1}'
 
     torch.save({
         'model_params': model_param
@@ -201,9 +202,11 @@ def save_to_csv(args: TestArgs, preds, path: str):
     df = pd.read_csv(args.train_data_path)
     le = preprocessing.LabelEncoder()
     df['artist'] = le.fit_transform(df['artist'].values)
+    
     preds = le.inverse_transform(preds)
     submit = pd.read_csv(args.sample_submission_path)
 
     submit['artist'] = preds
 
     submit.to_csv(path, index=False)
+

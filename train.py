@@ -1,9 +1,4 @@
-import glob
-import cv2
-import pandas as pd
-import matplotlib.pyplot as plt
 import argparse
-import random
 import os
 import numpy as np
 
@@ -11,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 
 from tqdm import tqdm
 from copy import deepcopy
@@ -19,18 +14,12 @@ from copy import deepcopy
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
 
-import torchvision.models as models
-
-from sklearn import preprocessing
-from sklearn.metrics import f1_score
-from sklearn.model_selection import train_test_split
-
-from Modules.Utility import seed_everything, Args, get_data, rand_bbox, validation, F1Loss, save_model
+from Modules.Utility import seed_everything, TrainArgs, get_data, rand_bbox, validation, F1Loss, save_model
 from Modules.CustomDataset import CustomDatasetV2
 from Modules.CustomModel import EfficientNet_B4
 
 
-def train_and_save(args: Args):
+def train_and_save(args: TrainArgs):
 
     seed_everything(args.seed)
 
@@ -57,7 +46,7 @@ def train_and_save(args: Args):
     val_dataset = CustomDatasetV2(val_df_path, val_df_label, test_transform)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
-    model = EfficientNet_B4(len(train_df_label.unique())).to(args.deivce)
+    model = EfficientNet_B4(50).to(args.device)
 
     criterion = F1Loss().to(args.device)
     optimizer = optim.Adam(params = model.parameters(), lr = args.lr)
@@ -74,6 +63,8 @@ def train_and_save(args: Args):
             
             size = size.float().to(args.device)
 
+            rgb_mean = torch.mean(img, dim=(-2, -1)) # B C
+
             # cutmix
             r = np.random.rand(1)
             if r < 0.5:
@@ -86,10 +77,10 @@ def train_and_save(args: Args):
                 # adjust lambda to exactly match pixel ratio
                 lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (img.size()[-1] * img.size()[-2]))
                 # compute output
-                outs = model(img, size)
+                outs = model(img, size, rgb_mean)
                 loss = criterion(outs, target_a) * lam + criterion(outs, target_b) * (1. - lam)
             else:
-                outs = model(img, size)
+                outs = model(img, size, rgb_mean)
                 loss = criterion(outs, label)
 
 
@@ -115,13 +106,11 @@ def train_and_save(args: Args):
     save_model(best_model, os.path.join(args.save_model_dir, f'{args.epochs}_best_{model.__class__.__name__}'))
         
     
-
-
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=60)
-    parser.add_argument('--scheduler_step', default=30)
+    parser.add_argument('--epochs', type=int, default=30)
+    parser.add_argument('--scheduler_step', default=20)
     parser.add_argument('--step_decay', default=0.1)
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--batch_size', type=int, default=32)
@@ -132,5 +121,5 @@ if __name__ == '__main__':
     parser.add_argument('--data_path', default='./data/train_repaired.csv')
     parser.add_argument('--save_model_dir', default='./models')
 
-    args = Args(parser.parse_args())
+    args = TrainArgs(parser.parse_args())
     train_and_save(args)
