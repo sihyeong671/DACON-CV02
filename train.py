@@ -30,13 +30,15 @@ def train_and_save(args: TrainArgs):
                             A.HorizontalFlip(),
                             A.RandomRotate90(),
                             A.Resize(args.img_size,args.img_size),
-                            A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
+                            # A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
+                            A.Normalize(mean=(0., 0., 0.), std=(1., 1., 1.), max_pixel_value=255.0, always_apply=False, p=1.0),
                             ToTensorV2()
                             ])
 
     test_transform = A.Compose([
                             A.Resize(args.img_size,args.img_size),
-                            A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
+                            # A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
+                            A.Normalize(mean=(0., 0., 0.), std=(1., 1., 1.), max_pixel_value=255.0, always_apply=False, p=1.0),
                             ToTensorV2()
                             ])
 
@@ -46,7 +48,7 @@ def train_and_save(args: TrainArgs):
     val_dataset = CustomDatasetV2(val_df_path, val_df_label, test_transform)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
-    model = EfficientNet_B4(50).to(args.device)
+    model = EfficientNet_B4(50).to(args.device) # num_classes
 
     criterion = F1Loss().to(args.device)
     optimizer = optim.Adam(params = model.parameters(), lr = args.lr)
@@ -58,20 +60,21 @@ def train_and_save(args: TrainArgs):
     for epoch in range(1, args.epochs+1):
         model.train()
         train_loss = []
-        for img, label, size in tqdm(train_loader):
-            img, label = img.float().to(args.device), label.to(args.device)
-            
-            size = size.float().to(args.device)
-
-            rgb_mean = torch.mean(img, dim=(-2, -1)) # B C
+        for data in tqdm(train_loader):
+            img = data['image'].float().to(args.device)
+            label = data['label'].to(args.device)
+            rgb_mean = data['rgb_mean'].float().to(args.device)
+            size = data['size'].float().to(args.device)
 
             # cutmix
             r = np.random.rand(1)
-            if r < 0.5:
+            if r < 0.0:
                 lam = np.random.beta(args.beta, args.beta)
                 rand_index = torch.randperm(img.size()[0]).to(args.device)
+
                 target_a = label
                 target_b = label[rand_index]
+
                 bbx1, bby1, bbx2, bby2 = rand_bbox(img.size(), lam)
                 img[:, :, bbx1:bbx2, bby1:bby2] = img[rand_index, :, bbx1:bbx2, bby1:bby2]
                 # adjust lambda to exactly match pixel ratio
@@ -109,7 +112,7 @@ def train_and_save(args: TrainArgs):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=30)
+    parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--scheduler_step', default=20)
     parser.add_argument('--step_decay', default=0.1)
     parser.add_argument('--lr', type=float, default=0.001)
