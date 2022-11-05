@@ -10,7 +10,8 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import cv2
-
+import json
+import wandb
 from glob import glob
 
 def seed_everything(seed):
@@ -19,8 +20,8 @@ def seed_everything(seed):
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.deterministic = True  # type: ignore
+    torch.backends.cudnn.benchmark = True  # type: ignore
 
 def competition_metric(true, pred):
     return f1_score(true, pred, average="macro")
@@ -71,38 +72,67 @@ def validation(model, criterion, test_loader, device):
         
     val_f1 = competition_metric(true_labels, model_preds)
     return np.mean(val_loss), val_f1
+def auto_set_attribute(obj, args:"dict[str, object]"):
+    for key in args:
+        if hasattr(obj, key):
+            setattr(obj, key, args[key])
+        else:
+            raise Exception("Unknown Attribute -> name : {0}".format(key))
 
+def auto_check_attribute(obj):
+    for attr in obj.__dict__:
+        if(getattr(obj, attr) is None or getattr(obj, attr) is 'None'):
+            raise Exception("All attributes MUST NOT be None -> name : {0}".format(attr))
 
-class TrainArgs:
-    def __init__(self, args):
-        self.epochs = args.epochs
-        self.lr = args.lr
-        self.batch_size = args.batch_size
-        self.seed = args.seed
-        self.img_size = args.img_size
-        self.device = args.device
-        self.beta = args.beta
-        self.data_path = args.data_path
-        self.scheduler_step = args.scheduler_step
-        self.save_model_dir = args.save_model_dir
-        self.step_decay = args.step_decay
-
-class TestArgs:
-    def __init__(self, args):
-        self.batch_size = args.batch_size
-        self.img_size = args.img_size
-        self.device = args.device
-        self.train_data_path = args.train_data_path
-        self.test_data_path = args.test_data_path
-        self.save_model_dir = args.save_model_dir
-        self.model_name = args.model_name
-        self.save_csv_dir = args.save_csv_dir
-        self.sample_submission_path = args.sample_submission_path
+class ArgsBase:
+    def __init__(self, args) -> None:
+        args = vars(args)
+        self.epochs = 20
+        self.lr = 1e-3
+        self.batch_size = 32
+        self.seed = 999
+        self.img_size = 380
+        self.device = 'cuda'
+        self.data_path = './data'
+        self.local_path = './local'
+        self.config_path = './local'
+        self.model_weight_path = './local'
+        self.sample_submission_name = 'sample_submission.csv'
+        self.wandb_entity_name = 'dacon-artist-cv02'
+        self.wandb_project_name = 'None'
         
+        self.train_data_name = 'train_repaired.csv'
+        self.test_data_name = 'test.csv'
+        self.model_generator = 'None'
 
+class TrainArgs(ArgsBase):
+    def __init__(self, args):
+        super(TrainArgs, self).__init__(args)
+        args = vars(args)
+        self.beta = 1
+        self.scheduler_step = 20
+        self.step_decay = 0.1
+        self.save_weight_name = 'Untitled_Weight_Name.tar'
+        auto_set_attribute(self, args)
+        auto_check_attribute(self)
+
+class TestArgs(ArgsBase):
+    def __init__(self, args):
+        super(TestArgs, self).__init__(args)
+        args = vars(args)
+        self.load_weight_name = 'None' #'60epoch_best_EfficientNet_B4_v0'
+        auto_set_attribute(self, args)
+        auto_check_attribute(self)
+
+def convert_args_to_dict(args:ArgsBase):
+    dt = {}
+    for attr in args.__dict__:
+        dt[attr] = getattr(args, attr)
+    return dt
 
 def get_data(args: TrainArgs, sampling: bool = True):
-    df = pd.read_csv(args.data_path)
+    print("read csv from [", os.path.join(args.data_path, args.train_data_name),']')
+    df = pd.read_csv(os.path.join(args.data_path, args.train_data_name))
     le = preprocessing.LabelEncoder()
     df['artist'] = le.fit_transform(df['artist'].values)
     
@@ -122,7 +152,7 @@ def get_data(args: TrainArgs, sampling: bool = True):
         train_df_sample = train_df
         val_df_sample = val_df
         
-    return train_df_sample.img_path.values, train_df_sample.artist.values, val_df_sample.img_path.values, val_df_sample.artist.values
+    return train_df_sample.img_path.values, train_df_sample.artist.values, val_df_sample.img_path.values, val_df_sample.artist.values  # type: ignore
 
 
 def rand_bbox(size, lam):
@@ -188,25 +218,35 @@ class FocalLoss(nn.Module):
         )
 
 
-def save_model(model_param, path: str):
-
+def save_model(model_param, args:TrainArgs, path: str):
     version = 'v' + f'{len(glob(path+"_*"))+1}'
-
     torch.save({
-        'model_params': model_param
+        'model_params': model_param,
+        'args': args
     }, path+f'_{version}.pth')
+
+def load_model(args:TestArgs) -> "tuple[torch.nn.Module, TrainArgs]":
+    ckpt = torch.load(os.path.join(args.model_weight_path, args.load_weight_name), map_location=args.device)  # type: ignore
+    model = eval(ckpt['model_generator']).to(args.device)
+    model.load_state_dict(ckpt['model_params'])
+    model.eval()
+    train_args = ckpt['args']
+    return model, train_args
 
 
 def save_to_csv(args: TestArgs, preds, path: str):
 
-    df = pd.read_csv(args.train_data_path)
+    df = pd.read_csv(os.path.join(args.data_path, args.train_data_name))
     le = preprocessing.LabelEncoder()
     df['artist'] = le.fit_transform(df['artist'].values)
     
     preds = le.inverse_transform(preds)
-    submit = pd.read_csv(args.sample_submission_path)
+    submit = pd.read_csv(os.path.join(args.data_path, args.sample_submission_name))
 
     submit['artist'] = preds
 
     submit.to_csv(path, index=False)
 
+def init_wandb(args:ArgsBase):
+    wandb.init(project=args.wandb_project_name, entity=args.wandb_entity_name)
+    wandb.config = convert_args_to_dict(args)

@@ -3,6 +3,9 @@ open.zip
 *.csv
 *.tar
 
+# wandb
+wandb/*
+
 # Local works
 local/*
 
