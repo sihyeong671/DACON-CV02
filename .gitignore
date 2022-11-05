@@ -1,12 +1,39 @@
-/data
-.vscode
-Pipfile
-.python-version
-.ipynb_checkpoints
-Pipfile.lock
-.DS_Store
-/model/*.tar
+
 open.zip
 *.csv
 *.tar
+
+# wandb
+wandb/*
+
+# Local works
+local/*
+
+# Dataset
+data/*
+
+# python & jupyter
 */__pycache__/*
+.python-version
+.ipynb_checkpoints
+
+# macOS + Windows
+.DS_Store
+._*
+Thumbs.db
+
+# pipenv
+Pipfile
+Pipfile.lock
+
+# Local History for Visual Studio Code
+.history/
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+                                                                                                                                            11,1           5%

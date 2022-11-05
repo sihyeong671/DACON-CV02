@@ -7,16 +7,18 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-
+import datetime as dt
 from tqdm import tqdm
 from copy import deepcopy
 
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
 
-from Modules.Utility import seed_everything, TrainArgs, get_data, rand_bbox, validation, F1Loss, save_model
+from Modules.Utility import *
 from Modules.CustomDataset import CustomDatasetV2
 from Modules.CustomModel import EfficientNet_B4
+
+import wandb
 
 
 def train_and_save(args: TrainArgs):
@@ -48,14 +50,13 @@ def train_and_save(args: TrainArgs):
     val_dataset = CustomDatasetV2(val_df_path, val_df_label, test_transform)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
-    model = EfficientNet_B4(50).to(args.device) # num_classes
+    model = eval(args.model_generator).to(args.device)
 
     criterion = F1Loss().to(args.device)
     optimizer = optim.Adam(params = model.parameters(), lr = args.lr)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=args.scheduler_step, gamma=args.step_decay)
 
     best_score = 0
-    best_model = None
     
     for epoch in range(1, args.epochs+1):
         model.train()
@@ -92,37 +93,44 @@ def train_and_save(args: TrainArgs):
             optimizer.step()
 
             train_loss.append(loss.item())
+            wandb.log({"train/tr_loss per batch": loss.item()})
 
         tr_loss = np.mean(train_loss)
             
         val_loss, val_score = validation(model, criterion, val_loader, args.device)
             
         print(f'Epoch [{epoch}], Train Loss : [{tr_loss:.5f}] Val Loss : [{val_loss:.5f}] Val F1 Score : [{val_score:.5f}]')
-        
+        wandb.log({"train/tr_loss per epoch":tr_loss, "train/val_loss per epoch":val_loss, "train/f1 score":val_score})
         if scheduler is not None:
             scheduler.step()
-            
+        wandb.watch(model)
         if best_score < val_score:
-            best_model = deepcopy(model.state_dict())
             best_score = val_score
-    
-    save_model(best_model, os.path.join(args.save_model_dir, f'{args.epochs}_best_{model.__class__.__name__}'))
+            args.save_weight_name = f'{args.epochs}_best_{model.__class__.__name__}'
+            save_model(model, args, os.path.join(args.model_weight_path, args.save_weight_name))
         
     
 if __name__ == '__main__':
-
+    now = dt.datetime.now().strftime('%Y-%m-%d %H.%M.%S')
+    print('The training started at ', now)
     parser = argparse.ArgumentParser()
+    parser.add_argument('--start_time', type=str, default=now)
     parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--scheduler_step', default=20)
     parser.add_argument('--step_decay', default=0.1)
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--batch_size', type=int, default=32)
-    parser.add_argument('--seed', type=int, default=999)
     parser.add_argument('--img_size', type=int, default=380)
-    parser.add_argument('--device', default='cuda')
     parser.add_argument('--beta', default=1)
-    parser.add_argument('--data_path', default='./data/train_repaired.csv')
-    parser.add_argument('--save_model_dir', default='./models')
-
+    parser.add_argument('--model_generator', default="EfficientNet_B4(50)")
+    # parser.add_argument('--wandb_project_name', default="Untitled-Project")
+    
+    # print(vars(parser.parse_args()))
     args = TrainArgs(parser.parse_args())
+    args_dict = convert_args_to_dict(args)
+    print('***** echo args *****')
+    for k in args_dict:
+        print(' - ', k, ':', args_dict[k])
+    print('*********************')
+    init_wandb(args)
     train_and_save(args)
