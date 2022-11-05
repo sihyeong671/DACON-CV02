@@ -33,12 +33,12 @@ def inference(model, test_loader, device):
     model_preds = []
     
     with torch.no_grad():
-        for item in tqdm(iter(test_loader)):
-            img = item['image'].float().to(device)
-            h = item['height']
-            w = item['width']
+        for data in tqdm(test_loader):
+            img = data['image'].float().to(device)
+            rgb_mean = data['rgb_mean'].float().to(device)
+            size = data['size'].float().to(device)
             
-            model_pred = model(img)
+            model_pred = model(img, size, rgb_mean)
             model_preds += model_pred.argmax(1).detach().cpu().numpy().tolist()
     
     print('Done.')
@@ -54,14 +54,14 @@ def validation(model, criterion, test_loader, device):
     val_loss = []
     
     with torch.no_grad():
-        for img, label, size in tqdm(test_loader):
-            img, label = img.float().to(device), label.to(device)
+        for data in tqdm(test_loader):
+            img = data['image'].float().to(device)
+            label = data['label'].to(device)
+            rgb_mean = data['rgb_mean'].to(device)
+            size = data['size'].float().to(device)
 
-            size = size.float().to(device)
-            rgb_mean = torch.mean(img, dim=(-2, -1))
             model_pred = model(img, size, rgb_mean)
             
-
             loss = criterion(model_pred, label)
             
             val_loss.append(loss.item())

@@ -41,28 +41,33 @@ class CustomDatasetV2(Dataset):
         img_path = os.path.join('./data', img_path) # 본인 데이터 폴더 위치 확인 필요
         image = cv2.imread(img_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
         
         # 이미지 길이 1 / 2
 
         if self.labels is not None: # train
-          h, w, _ = image.shape
-          size = torch.tensor([h, w])
+          h, w, c = image.shape
           l = min(h//2, w//2)
           inner_transform = A.Compose([A.RandomCrop(width=l, height=l)])
+          size = torch.tensor([h, w])
         else: # test
-          h, w, _ = image.shape
-          size = torch.tensor([2*h, 2*w])
-        
+          h, w, c = image.shape
+          h *= 2
+          w *= 2
+          size = torch.tensor([h, w])
+
         if self.transforms is not None:
             if self.labels is not None: # train
               image = inner_transform(image=image)['image']
             image = self.transforms(image=image)['image']
+            rgb_mean = torch.mean(image, dim=(-2, -1))
         
         if self.labels is not None:
             label = self.labels[index]
-            return image, label, size
         else:
-            return image, size
+            label = 'None'
+
+        return {'image': image, 'size': size, 'rgb_mean': rgb_mean, 'label': label}
     
     def __len__(self):
         return len(self.img_paths)
