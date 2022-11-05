@@ -78,6 +78,11 @@ def auto_set_attribute(obj, args:"dict[str, object]"):
             setattr(obj, key, args[key])
         else:
             raise Exception("Unknown Attribute -> name : {0}".format(key))
+    self = obj
+    for attr in self.__dict__:
+        if(type(getattr(self, attr)) is not str): continue
+        if(getattr(self, attr)[0] is not '&'):continue
+        setattr(self, attr, eval(getattr(self, attr)[1:]))
 
 def auto_check_attribute(obj):
     for attr in obj.__dict__:
@@ -98,9 +103,10 @@ class ArgsBase:
         self.config_path = './local'
         self.model_weight_path = './local'
         self.sample_submission_name = 'sample_submission.csv'
+        self.wandb_run_name = '&self.start_time'
         self.wandb_entity_name = 'dacon-artist-cv02'
-        self.wandb_project_name = 'None'
-        
+        self.wandb_project_name = '&self.model_generator'
+        self.start_time = '%Y-%m-%d %H.%M.%S'
         self.train_data_name = 'train_repaired.csv'
         self.test_data_name = 'test.csv'
         self.model_generator = 'None'
@@ -248,5 +254,6 @@ def save_to_csv(args: TestArgs, preds, path: str):
     submit.to_csv(path, index=False)
 
 def init_wandb(args:ArgsBase):
-    wandb.init(project=args.wandb_project_name, entity=args.wandb_entity_name)
+    wandb.init(project=args.wandb_project_name, entity=args.wandb_entity_name, name=args.wandb_run_name, config=convert_args_to_dict(args))
     wandb.config = convert_args_to_dict(args)
+    

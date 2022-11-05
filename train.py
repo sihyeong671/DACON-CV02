@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-
+import datetime as dt
 from tqdm import tqdm
 from copy import deepcopy
 
@@ -111,8 +111,10 @@ def train_and_save(args: TrainArgs):
         
     
 if __name__ == '__main__':
-
+    now = dt.datetime.now().strftime('%Y-%m-%d %H.%M.%S')
+    print('The training started at ', now)
     parser = argparse.ArgumentParser()
+    parser.add_argument('--start_time', type=str, default=now)
     parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--scheduler_step', default=20)
     parser.add_argument('--step_decay', default=0.1)
@@ -121,13 +123,14 @@ if __name__ == '__main__':
     parser.add_argument('--img_size', type=int, default=380)
     parser.add_argument('--beta', default=1)
     parser.add_argument('--model_generator', default="EfficientNet_B4(50)")
-    parser.add_argument('--wandb_project_name', default="Untitled-Project")
+    # parser.add_argument('--wandb_project_name', default="Untitled-Project")
     
     # print(vars(parser.parse_args()))
     args = TrainArgs(parser.parse_args())
     args_dict = convert_args_to_dict(args)
-    print('* - echo args - *')
+    print('***** echo args *****')
     for k in args_dict:
-        print(' - ', k, args_dict[k])
+        print(' - ', k, ':', args_dict[k])
+    print('*********************')
     init_wandb(args)
     train_and_save(args)
