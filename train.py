@@ -93,14 +93,14 @@ def train_and_save(args: TrainArgs):
             optimizer.step()
 
             train_loss.append(loss.item())
-            wandb.log({"tr_loss/batch": loss.item()})
+            wandb.log({"train/tr_loss per batch": loss.item()})
 
         tr_loss = np.mean(train_loss)
             
         val_loss, val_score = validation(model, criterion, val_loader, args.device)
             
         print(f'Epoch [{epoch}], Train Loss : [{tr_loss:.5f}] Val Loss : [{val_loss:.5f}] Val F1 Score : [{val_score:.5f}]')
-        wandb.log({"tr_loss/epoch":tr_loss, "val_loss/epoch":val_loss, "f1_score/epoch":val_score})
+        wandb.log({"train/tr_loss per epoch":tr_loss, "train/val_loss per epoch":val_loss, "train/f1 score":val_score})
         if scheduler is not None:
             scheduler.step()
         wandb.watch(model)
