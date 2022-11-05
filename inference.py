@@ -16,17 +16,18 @@ from Modules.CustomModel import EfficientNet_B4
 
 def inference_and_save(args: TestArgs):
 
-    ckpt = torch.load(os.path.join(args.save_model_dir, args.model_name), map_location=args.device)
+    ckpt = torch.load(os.path.join(args.save_model_dir, args.model_name)+'.pth', map_location=args.device)
     model = EfficientNet_B4(50).to(args.device)
     model.load_state_dict(ckpt['model_params'])
     model.eval()
 
-    test_df = pd.read_csv(args.data_path)
+    test_df = pd.read_csv(args.test_data_path)
     test_img_path = test_df.img_path
 
     test_transform = A.Compose([
                             A.Resize(args.img_size,args.img_size),
-                            A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
+                            # A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
+                            A.Normalize(mean=(0., 0., 0.), std=(1., 1., 1.), max_pixel_value=255.0, always_apply=False, p=1.0),
                             ToTensorV2()
                             ])
 
@@ -36,11 +37,12 @@ def inference_and_save(args: TestArgs):
     model_preds = []
     
     with torch.no_grad():
-        for img, size in tqdm(iter(test_loader)):
-            img = img.float().to(args.device)
-            size = size.float().to(args.device)
+        for data in tqdm(iter(test_loader)):
+            img = data['image'].float().to(args.device)
+            rgb_mean = data['rgb_mean'].to(args.device)
+            size = data['size'].float().to(args.device)
             
-            model_pred = model(img, size)
+            model_pred = model(img, size, rgb_mean)
             model_preds += model_pred.argmax(1).detach().cpu().numpy().tolist()
     
     save_to_csv(args, model_preds, os.path.join(args.save_csv_dir, f'{args.model_name}.csv'))
@@ -58,7 +60,7 @@ if __name__ == '__main__':
     parser.add_argument('--train_data_path', default='./data/train.csv')
     parser.add_argument('--test_data_path', default='./data/test.csv')
     parser.add_argument('--save_model_dir', default='./models')
-    parser.add_argument('--model_name', default='60epoch_best_EfficientNet_B4_v0')
+    parser.add_argument('--model_name', default='20_best_EfficientNet_B4_v1')
     parser.add_argument('--save_csv_dir', default='./csv')
     parser.add_argument('--sample_submission_path', default='./data/sample_submission.csv')
 
