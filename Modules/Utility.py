@@ -12,6 +12,7 @@ import pandas as pd
 import cv2
 import json
 import wandb
+import Modules.CustomModel
 from glob import glob
 
 def seed_everything(seed):
@@ -80,44 +81,44 @@ def auto_set_attribute(obj, args:"dict[str, object]"):
             raise Exception("Unknown Attribute -> name : {0}".format(key))
     self = obj
     for attr in self.__dict__:
-        if(type(getattr(self, attr)) is not str): continue
-        if(getattr(self, attr)[0] is not '&'):continue
+        if(type(getattr(self, attr)) != str): continue
+        if(getattr(self, attr)[0] != '&'):continue
         setattr(self, attr, eval(getattr(self, attr)[1:]))
 
 def auto_check_attribute(obj):
     for attr in obj.__dict__:
-        if(getattr(obj, attr) is None or getattr(obj, attr) is 'None'):
+        if(getattr(obj, attr) == None or getattr(obj, attr) == 'None'):
             raise Exception("All attributes MUST NOT be None -> name : {0}".format(attr))
 
 class ArgsBase:
     def __init__(self, args) -> None:
         args = vars(args)
-        self.epochs = 20
-        self.lr = 1e-3
         self.batch_size = 32
         self.seed = 999
-        self.img_size = 380
         self.device = 'cuda'
         self.data_path = './data'
         self.local_path = './local'
         self.config_path = './local'
         self.model_weight_path = './local'
         self.sample_submission_name = 'sample_submission.csv'
-        self.wandb_run_name = '&self.start_time'
         self.wandb_entity_name = 'dacon-artist-cv02'
-        self.wandb_project_name = '&self.model_generator'
-        self.start_time = '%Y-%m-%d %H.%M.%S'
         self.train_data_name = 'train_repaired.csv'
         self.test_data_name = 'test.csv'
-        self.model_generator = 'None'
 
 class TrainArgs(ArgsBase):
     def __init__(self, args):
         super(TrainArgs, self).__init__(args)
+        self.epochs = 20
+        self.lr = 1e-3
         args = vars(args)
         self.beta = 1
         self.scheduler_step = 20
+        self.img_size = 380
         self.step_decay = 0.1
+        self.wandb_run_name = '&self.start_time'
+        self.wandb_project_name = '&self.model_generator'
+        self.start_time = '%Y-%m-%d %H.%M.%S'
+        self.model_generator = 'None'
         self.save_weight_name = 'Untitled_Weight_Name.tar'
         auto_set_attribute(self, args)
         auto_check_attribute(self)
@@ -224,16 +225,17 @@ class FocalLoss(nn.Module):
         )
 
 
-def save_model(model_param, args:TrainArgs, path: str):
+def save_model(model, args:TrainArgs, path: str):
     version = 'v' + f'{len(glob(path+"_*"))+1}'
     torch.save({
-        'model_params': model_param,
+        'model_params': model.state_dict(),
         'args': args
     }, path+f'_{version}.pth')
 
 def load_model(args:TestArgs) -> "tuple[torch.nn.Module, TrainArgs]":
-    ckpt = torch.load(os.path.join(args.model_weight_path, args.load_weight_name), map_location=args.device)  # type: ignore
-    model = eval(ckpt['model_generator']).to(args.device)
+    ckpt = torch.load(os.path.join(args.model_weight_path, args.load_weight_name), map_location=args.device) 
+    print(ckpt['args'].model_generator) # type: ignore
+    model = eval('Modules.CustomModel.' + ckpt['args'].model_generator).to(args.device)
     model.load_state_dict(ckpt['model_params'])
     model.eval()
     train_args = ckpt['args']
@@ -252,8 +254,9 @@ def save_to_csv(args: TestArgs, preds, path: str):
     submit['artist'] = preds
 
     submit.to_csv(path, index=False)
+    return preds
 
-def init_wandb(args:ArgsBase):
+def init_wandb(args:TrainArgs):
     wandb.init(project=args.wandb_project_name, entity=args.wandb_entity_name, name=args.wandb_run_name, config=convert_args_to_dict(args))
     wandb.config = convert_args_to_dict(args)
     

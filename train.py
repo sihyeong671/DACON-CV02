@@ -14,9 +14,10 @@ from copy import deepcopy
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
 
-from Modules.Utility import *
-from Modules.CustomDataset import CustomDatasetV2
-from Modules.CustomModel import EfficientNet_B4
+# from Modules.Utility import *
+# from Modules.CustomDataset import CustomDatasetV2
+# from Modules.CustomModel import *
+from Modules import *
 
 import wandb
 
@@ -93,7 +94,6 @@ def train_and_save(args: TrainArgs):
             optimizer.step()
 
             train_loss.append(loss.item())
-            wandb.log({"train/tr_loss per batch": loss.item()})
 
         tr_loss = np.mean(train_loss)
             
