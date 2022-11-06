@@ -30,15 +30,15 @@ def train_and_save(args: TrainArgs):
                             A.HorizontalFlip(),
                             A.RandomRotate90(),
                             A.Resize(args.img_size,args.img_size),
-                            # A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
-                            A.Normalize(mean=(0., 0., 0.), std=(1., 1., 1.), max_pixel_value=255.0, always_apply=False, p=1.0),
+                            A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
+                            # A.Normalize(mean=(0., 0., 0.), std=(1., 1., 1.), max_pixel_value=255.0, always_apply=False, p=1.0),
                             ToTensorV2()
                             ])
 
     test_transform = A.Compose([
                             A.Resize(args.img_size,args.img_size),
-                            # A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
-                            A.Normalize(mean=(0., 0., 0.), std=(1., 1., 1.), max_pixel_value=255.0, always_apply=False, p=1.0),
+                            A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
+                            # A.Normalize(mean=(0., 0., 0.), std=(1., 1., 1.), max_pixel_value=255.0, always_apply=False, p=1.0),
                             ToTensorV2()
                             ])
 
@@ -55,7 +55,11 @@ def train_and_save(args: TrainArgs):
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=args.scheduler_step, gamma=args.step_decay)
 
     best_score = 0
+    best_loss = np.inf
     best_model = None
+
+    es_check = 0
+    es_limit = 7
     
     for epoch in range(1, args.epochs+1):
         model.train()
@@ -68,18 +72,24 @@ def train_and_save(args: TrainArgs):
 
             # cutmix
             r = np.random.rand(1)
-            if r < 0.0:
+            if r < 0.5:
                 lam = np.random.beta(args.beta, args.beta)
                 rand_index = torch.randperm(img.size()[0]).to(args.device)
 
                 target_a = label
                 target_b = label[rand_index]
+                size_a = size
+                size_b = size[rand_index]
+                rgb_mean_a = rgb_mean
+                rgb_mean_b = rgb_mean[rand_index]
 
                 bbx1, bby1, bbx2, bby2 = rand_bbox(img.size(), lam)
                 img[:, :, bbx1:bbx2, bby1:bby2] = img[rand_index, :, bbx1:bbx2, bby1:bby2]
                 # adjust lambda to exactly match pixel ratio
                 lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (img.size()[-1] * img.size()[-2]))
                 # compute output
+                size = size_a * lam + size_b * (1. - lam)
+                rgb_mean = rgb_mean_a * lam + rgb_mean_b * (1. - lam)
                 outs = model(img, size, rgb_mean)
                 loss = criterion(outs, target_a) * lam + criterion(outs, target_b) * (1. - lam)
             else:
@@ -105,6 +115,14 @@ def train_and_save(args: TrainArgs):
         if best_score < val_score:
             best_model = deepcopy(model.state_dict())
             best_score = val_score
+            es_check = 0
+        else:
+            es_check += 1
+
+        # early stopping
+        if es_check > es_limit:
+            break
+
     
     save_model(best_model, os.path.join(args.save_model_dir, f'{args.epochs}_best_{model.__class__.__name__}'))
         
@@ -112,8 +130,8 @@ def train_and_save(args: TrainArgs):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=20)
-    parser.add_argument('--scheduler_step', default=20)
+    parser.add_argument('--epochs', type=int, default=80)
+    parser.add_argument('--scheduler_step', default=30)
     parser.add_argument('--step_decay', default=0.1)
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--batch_size', type=int, default=32)
