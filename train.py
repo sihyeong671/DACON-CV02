@@ -43,7 +43,7 @@ def train_and_save(args: TrainArgs):
 
     model = eval(args.model_generator).to(args.device)
 
-    criterion = F1Loss().to(args.device)
+    criterion = nn.CrossEntropyLoss().to(args.device)
     optimizer = optim.Adam(params = model.parameters(), lr = args.lr)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=args.scheduler_step, gamma=args.step_decay)
 

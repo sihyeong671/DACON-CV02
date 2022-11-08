@@ -109,7 +109,7 @@ class ArgsBase:
 class TrainArgs(ArgsBase):
     def __init__(self, args):
         super(TrainArgs, self).__init__(args)
-        self.epochs = 20
+        self.epochs = 45
         self.lr = 1e-3
         args = vars(args)
         self.beta = 1
@@ -152,7 +152,7 @@ def get_data(args: TrainArgs, sampling: bool = True):
         for _ in range(15): # 원하는 만큼 sampling
             train_df_sample = pd.concat([train_df_sample, g.apply(lambda x: x.sample(21))])
     else:
-        train_df_sample = train_df
+        train_df_sample = df
         
     return train_df_sample.img_path.values, train_df_sample.artist.values, # type: ignore
 
