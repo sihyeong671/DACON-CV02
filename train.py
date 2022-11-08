@@ -96,7 +96,7 @@ def train_and_save(args: TrainArgs):
         wandb.log({"train/tr_loss per epoch":tr_loss, "train/val_loss per epoch":val_loss, "train/f1 score":val_score})
         if scheduler is not None:
             scheduler.step()
-        wandb.watch(model)
+        # wandb.watch(model)
         if best_score < val_score:
             best_score = val_score
             args.save_weight_name = f'{args.epochs}_best_{model.__class__.__name__}'
