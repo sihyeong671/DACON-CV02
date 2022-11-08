@@ -89,8 +89,9 @@ def train_and_save(args: TrainArgs):
                 # compute output
                 size = size_a * lam + size_b * (1. - lam)
                 rgb_mean = rgb_mean_a * lam + rgb_mean_b * (1. - lam)
-                outs = model(img, size, rgb_mean)
-                loss = criterion(outs, target_a) * lam + criterion(outs, target_b) * (1. - lam)
+                outs_a = model(img, size_a, rgb_mean_a)
+                outs_b = model(img, size_b, rgb_mean_b)
+                loss = criterion(outs_a, target_a) * lam + criterion(outs_b, target_b) * (1. - lam)
             else:
                 outs = model(img, size, rgb_mean)
                 loss = criterion(outs, label)
