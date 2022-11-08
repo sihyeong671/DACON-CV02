@@ -46,7 +46,8 @@ def train_and_save(args: TrainArgs):
     criterion = nn.CrossEntropyLoss().to(args.device)
     optimizer = optim.Adam(params = model.parameters(), lr = args.lr)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=args.scheduler_step, gamma=args.step_decay)
-
+    
+    optimizer.zero_grad()
     best_score = 0
     NUM_ACCUM = 2
     for epoch in range(1, args.epochs+1):
@@ -100,8 +101,8 @@ def train_and_save(args: TrainArgs):
             loss.backward()
 
             if idx % NUM_ACCUM == 0:
-                optimizer.zero_grad()
                 optimizer.step()
+                optimizer.zero_grad()
 
             train_loss.append(loss.item())
 
