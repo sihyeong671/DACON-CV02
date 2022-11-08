@@ -48,13 +48,13 @@ def train_and_save(args: TrainArgs):
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=args.scheduler_step, gamma=args.step_decay)
 
     best_score = 0
-    
+    NUM_ACCUM = 2
     for epoch in range(1, args.epochs+1):
         model.train()
         train_loss = []
         train_f1 = []
         train_acc = []
-        for data in tqdm(train_loader):
+        for idx, data in enumerate(tqdm(train_loader)):
             img = data['image'].float().to(args.device)
             label = data['label'].to(args.device)
             rgb_mean = data['rgb_mean'].float().to(args.device)
@@ -80,32 +80,28 @@ def train_and_save(args: TrainArgs):
                 # compute output
                 size = size_a * lam + size_b * (1. - lam)
                 rgb_mean = rgb_mean_a * lam + rgb_mean_b * (1. - lam)
-                outs_a = model(img, size_a, rgb_mean_a)
-                outs_b = model(img, size_b, rgb_mean_b)
+                out_a = model(img, size_a, rgb_mean_a)
+                out_b = model(img, size_b, rgb_mean_b)
 
-                model_preds_a = outs_a.argmax(1).detach().cpu().numpy().tolist()
-                model_preds_b = outs_b.argmax(1).detach().cpu().numpy().tolist()
+                train_f1_item, train_acc_item = get_acc_and_f1(out_a, out_b, target_a, target_b, lam)
+                
+                train_f1.append(train_f1_item)
+                train_acc.append(train_acc_item)
 
-                train_f1_a = competition_metric(target_a, model_preds_a) * lam
-                train_f1_b = competition_metric(target_b, model_preds_b) * (1. - lam)
-                train_f1.append(train_f1_a+train_f1_b)
-
-                train_acc_a = (target_a==outs_a.argmax(1)).sum().item() * lam
-                train_acc_b = (target_b==outs_b.argmax(1)).sum().item() * (1. - lam)
-                train_acc.append(train_acc_a + train_acc_b)
-
-                loss = criterion(outs_a, target_a) * lam + criterion(outs_b, target_b) * (1. - lam)
+                loss = criterion(out_a, target_a) * lam + criterion(out_b, target_b) * (1. - lam)
             else:
                 outs = model(img, size, rgb_mean)
                 model_preds = outs.argmax(1).detach().cpu().numpy().tolist()
-                train_f1_item = competition_metric(label, model_preds)
+                label_lst = label.detach().cpu().numpy().tolist()
+                train_f1_item = competition_metric(label_lst, model_preds)
                 train_f1.append(train_f1_item)
                 loss = criterion(outs, label)
 
-
-            optimizer.zero_grad()
             loss.backward()
-            optimizer.step()
+
+            if idx % NUM_ACCUM == 0:
+                optimizer.zero_grad()
+                optimizer.step()
 
             train_loss.append(loss.item())
 
@@ -131,11 +127,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=653) # 
     parser.add_argument('--start_time', type=str, default=now)
-    parser.add_argument('--epochs', type=int, default=70)
+    parser.add_argument('--epochs', type=int, default=45)
     parser.add_argument('--scheduler_step', default=30)
     parser.add_argument('--step_decay', default=0.1)
     parser.add_argument('--lr', type=float, default=0.001)
-    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--img_size', type=int, default=380)
     parser.add_argument('--beta', default=1)
     parser.add_argument('--model_generator', default="EfficientNet_B4(50)")
