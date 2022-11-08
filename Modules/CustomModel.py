@@ -47,3 +47,4 @@ class EfficientNet_B4(nn.Module):
         x = torch.cat((x, lin), 1) # 여기 cat부분이 cnn부분 끝나고 분류하는 layer들어가기 전에 붙인 부분입니다.
         x = self.clf(x)
         return x
+

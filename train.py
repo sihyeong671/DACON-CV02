@@ -130,7 +130,7 @@ def train_and_save(args: TrainArgs):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=70)
+    parser.add_argument('--epochs', type=int, default=80)
     parser.add_argument('--scheduler_step', default=30)
     parser.add_argument('--step_decay', default=0.1)
     parser.add_argument('--lr', type=float, default=0.001)
