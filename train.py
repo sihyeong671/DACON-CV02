@@ -27,7 +27,6 @@ def train_and_save(args: TrainArgs):
     train_transform = A.Compose([
                             A.VerticalFlip(),
                             A.HorizontalFlip(),
-                            A.RandomRotate90(),
                             A.Resize(args.img_size,args.img_size),
                             A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
                             ToTensorV2()
@@ -41,9 +40,6 @@ def train_and_save(args: TrainArgs):
 
     train_dataset = CustomDatasetV2(train_df_path, train_df_label, train_transform)
     train_loader = DataLoader(train_dataset, batch_size = args.batch_size, shuffle=True, num_workers=2)
-
-    val_dataset = CustomDatasetV2(val_df_path, val_df_label, test_transform)
-    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
     model = eval(args.model_generator).to(args.device)
 
@@ -122,7 +118,7 @@ def train_and_save(args: TrainArgs):
         wandb.log({"Train Loss": tr_loss, "Train Acc":train_acc_score, "Train F1 Score":train_f1_score})
         if scheduler is not None:
             scheduler.step()
-            
+
         if best_score < train_f1_score:
             best_score = train_f1_score
             args.save_weight_name = f'{args.epochs}_best_{model.__class__.__name__}'

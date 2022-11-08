@@ -19,7 +19,7 @@ def inference_and_save(model, train_args: TrainArgs, test_args: TestArgs):
 
     test_transform = A.Compose([
                             A.Resize(train_args.img_size,train_args.img_size),
-                            A.Normalize(mean=(0., 0., 0.), std=(1., 1., 1.), max_pixel_value=255.0, always_apply=False, p=1.0),
+                            A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
                             ToTensorV2()
                             ])
 
