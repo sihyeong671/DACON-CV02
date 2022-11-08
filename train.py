@@ -22,7 +22,7 @@ def train_and_save(args: TrainArgs):
 
     seed_everything(args.seed)
 
-    train_df_path, train_df_label, val_df_path, val_df_label = get_data(args)
+    train_df_path, train_df_label = get_data(args)
 
     train_transform = A.Compose([
                             A.VerticalFlip(),

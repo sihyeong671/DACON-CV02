@@ -145,22 +145,16 @@ def get_data(args: TrainArgs, sampling: bool = True):
     df['artist'] = le.fit_transform(df['artist'].values)
     
 
-    # startify data
-    train_df, val_df, _, _ = train_test_split(df, df.img_path.values, test_size=0.2, random_state=args.seed, stratify=df.artist.values)
-
     if sampling:
         g = df.groupby('artist', group_keys=False)
         train_df_sample = pd.DataFrame()
-        val_df_sample = pd.DataFrame()
 
         for _ in range(15): # 원하는 만큼 sampling
-            train_df_sample = pd.concat([train_df_sample, g.apply(lambda x: x.sample(16))])
-            val_df_sample = pd.concat([val_df_sample, g.apply(lambda x: x.sample(5))])
+            train_df_sample = pd.concat([train_df_sample, g.apply(lambda x: x.sample(21))])
     else:
         train_df_sample = train_df
-        val_df_sample = val_df
         
-    return train_df_sample.img_path.values, train_df_sample.artist.values, val_df_sample.img_path.values, val_df_sample.artist.values  # type: ignore
+    return train_df_sample.img_path.values, train_df_sample.artist.values, # type: ignore
 
 
 def rand_bbox(size, lam):
