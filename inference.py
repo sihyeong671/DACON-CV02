@@ -8,6 +8,7 @@ from albumentations.pytorch.transforms import ToTensorV2
 
 import torch
 import torch.nn
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from Modules import *
@@ -37,7 +38,7 @@ def inference_and_save(model, train_args: TrainArgs, test_args: TestArgs):
             img = img.float().to(test_args.device)
             size = size.float().to(test_args.device)
 
-            model_pred = model(img, size, rgb_mean).detach().cpu().numpy().tolist()
+            model_pred = F.softmax(model(img, size, rgb_mean).detach().cpu()).numpy().tolist()
             model_preds += model_pred
             
     submit = pd.read_csv(os.path.join(test_args.data_path, test_args.sample_submission_name))
@@ -52,7 +53,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', type=int, default=128)
-    parser.add_argument('--load_weight_name', default='30_best_non_rgb_EfficientNet_B4_v15.pth')
+    parser.add_argument('--load_weight_name', default='20_best_EfficientNet_B4_v1.pth')
 
     test_args = TestArgs(parser.parse_args())
     args_dict = convert_args_to_dict(test_args)
