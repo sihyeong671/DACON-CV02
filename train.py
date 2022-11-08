@@ -107,9 +107,10 @@ if __name__ == '__main__':
     now = dt.datetime.now().strftime('%Y-%m-%d %H.%M.%S')
     print('The training started at ', now)
     parser = argparse.ArgumentParser()
+    parser.add_argument('--seed', type=int, default=653) # 
     parser.add_argument('--start_time', type=str, default=now)
-    parser.add_argument('--epochs', type=int, default=20)
-    parser.add_argument('--scheduler_step', default=20)
+    parser.add_argument('--epochs', type=int, default=70)
+    parser.add_argument('--scheduler_step', default=30)
     parser.add_argument('--step_decay', default=0.1)
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--batch_size', type=int, default=32)
@@ -117,7 +118,6 @@ if __name__ == '__main__':
     parser.add_argument('--beta', default=1)
     parser.add_argument('--model_generator', default="EfficientNet_B4(50)")
     parser.add_argument('--wandb_enable', default=True)
-    
     args = TrainArgs(parser.parse_args())
     args_dict = convert_args_to_dict(args)
 
