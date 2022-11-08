@@ -37,13 +37,13 @@ def inference_and_save(model, train_args: TrainArgs, test_args: TestArgs):
             img = img.float().to(test_args.device)
             size = size.float().to(test_args.device)
 
-            model_pred = model(img, size, rgb_mean).argmax(1).detach().cpu().numpy().tolist()
+            model_pred = model(img, size, rgb_mean).detach().cpu().numpy().tolist()
             model_preds += model_pred
-            for p in model_pred:
-                wandb.log({"validation/preds":p})
-    
-    converted_preds = save_to_csv(test_args, model_preds, os.path.join(test_args.local_path, f'{test_args.load_weight_name}_submission.csv'))
-    
+            
+    submit = pd.read_csv(os.path.join(test_args.data_path, test_args.sample_submission_name))
+    submit['artist'] = model_preds
+    submit.to_csv(os.path.join(test_args.local_path, f'{test_args.load_weight_name}_submission.csv'), index=False)
+        
     print('Done.')
 
 
@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', type=int, default=128)
-    parser.add_argument('--load_weight_name', default='20_best_EfficientNet_B4_v16.pth')
+    parser.add_argument('--load_weight_name', default='30_best_non_rgb_EfficientNet_B4_v15.pth')
 
     test_args = TestArgs(parser.parse_args())
     args_dict = convert_args_to_dict(test_args)
