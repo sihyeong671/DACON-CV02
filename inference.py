@@ -60,7 +60,7 @@ if __name__ == '__main__':
     parser.add_argument('--train_data_path', default='./data/train.csv')
     parser.add_argument('--test_data_path', default='./data/test.csv')
     parser.add_argument('--save_model_dir', default='./models')
-    parser.add_argument('--model_name', default='80_best_EfficientNet_B4_v2')
+    parser.add_argument('--model_name', default='80_best_EfficientNet_B4_v4')
     parser.add_argument('--save_csv_dir', default='./csv')
     parser.add_argument('--sample_submission_path', default='./data/sample_submission.csv')
 
