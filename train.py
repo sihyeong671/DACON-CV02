@@ -63,7 +63,7 @@ def train_and_save(args: TrainArgs):
 
             # cutmix
             r = np.random.rand(1)
-            if r < 0.0:
+            if r < 0.5:
                 lam = np.random.beta(args.beta, args.beta)
                 rand_index = torch.randperm(img.size()[0]).to(args.device)
 
