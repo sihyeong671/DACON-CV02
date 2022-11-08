@@ -1,2 +1,3 @@
 from .EfficientNet import *
-from .ResNet import *
+from .MaxViT import *
+from .ResNeXt import *
