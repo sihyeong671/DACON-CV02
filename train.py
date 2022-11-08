@@ -123,6 +123,7 @@ if __name__ == '__main__':
     parser.add_argument('--img_size', type=int, default=380)
     parser.add_argument('--beta', default=1)
     parser.add_argument('--model_generator', default="EfficientNet_B4(50)")
+    parser.add_argument('--wandb_enable', default=True)
     # parser.add_argument('--wandb_project_name', default="Untitled-Project")
     
     # print(vars(parser.parse_args()))
@@ -132,5 +133,6 @@ if __name__ == '__main__':
     for k in args_dict:
         print(' - ', k, ':', args_dict[k])
     print('*********************')
-    init_wandb(args)
+    if(args.wandb_enable):
+        init_wandb(args)
     train_and_save(args)
