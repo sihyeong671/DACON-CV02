@@ -116,8 +116,8 @@ class TrainArgs(ArgsBase):
         self.scheduler_step = 20
         self.img_size = 380
         self.step_decay = 0.1
-        self.wandb_run_name = '&self.start_time'
-        self.wandb_project_name = '&self.model_generator'
+        self.wandb_run_name = '&self.model_generator'
+        self.wandb_project_name = 'DACON-ArtistClassify'
         self.start_time = '%Y-%m-%d %H.%M.%S'
         self.model_generator = 'None'
         self.save_weight_name = 'Untitled_Weight_Name.tar'
