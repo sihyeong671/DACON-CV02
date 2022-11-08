@@ -101,9 +101,10 @@ class ArgsBase:
         self.config_path = './local'
         self.model_weight_path = './local'
         self.sample_submission_name = 'sample_submission.csv'
-        self.wandb_entity_name = 'dacon-artist-cv02'
         self.train_data_name = 'train_repaired.csv'
         self.test_data_name = 'test.csv'
+        self.wandb_entity_name = 'dacon-artist-cv02'
+        self.wandb_enable = True
 
 class TrainArgs(ArgsBase):
     def __init__(self, args):
@@ -115,8 +116,8 @@ class TrainArgs(ArgsBase):
         self.scheduler_step = 20
         self.img_size = 380
         self.step_decay = 0.1
-        self.wandb_run_name = '&self.start_time'
-        self.wandb_project_name = '&self.model_generator'
+        self.wandb_run_name = '&self.model_generator'
+        self.wandb_project_name = 'DACON-ArtistClassify'
         self.start_time = '%Y-%m-%d %H.%M.%S'
         self.model_generator = 'None'
         self.save_weight_name = 'Untitled_Weight_Name.tar'
@@ -256,7 +257,10 @@ def save_to_csv(args: TestArgs, preds, path: str):
     submit.to_csv(path, index=False)
     return preds
 
-def init_wandb(args:TrainArgs):
-    wandb.init(project=args.wandb_project_name, entity=args.wandb_entity_name, name=args.wandb_run_name, config=convert_args_to_dict(args))
-    wandb.config = convert_args_to_dict(args)
+def init_wandb(train_args:TrainArgs, test_args = None):  # type: ignore
+    config = convert_args_to_dict(train_args)
+    if(test_args != None):
+        config.update(convert_args_to_dict(test_args))
+    wandb.init(project=train_args.wandb_project_name, entity=train_args.wandb_entity_name, name=train_args.wandb_run_name, config=config)
+    wandb.config = convert_args_to_dict(train_args)
     

@@ -65,5 +65,5 @@ if __name__ == '__main__':
     for k in args_dict:
         print('>  - ', k, ':', args_dict[k])
     print('> *********************')
-    init_wandb(train_args)
+    init_wandb(train_args, test_args)
     inference_and_save(model, train_args, test_args)

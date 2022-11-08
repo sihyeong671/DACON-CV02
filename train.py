@@ -9,14 +9,9 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import datetime as dt
 from tqdm import tqdm
-from copy import deepcopy
 
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
-
-# from Modules.Utility import *
-# from Modules.CustomDataset import CustomDatasetV2
-# from Modules.CustomModel import *
 from Modules import *
 
 import wandb
@@ -33,15 +28,13 @@ def train_and_save(args: TrainArgs):
                             A.HorizontalFlip(),
                             A.RandomRotate90(),
                             A.Resize(args.img_size,args.img_size),
-                            # A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
-                            A.Normalize(mean=(0., 0., 0.), std=(1., 1., 1.), max_pixel_value=255.0, always_apply=False, p=1.0),
+                            A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
                             ToTensorV2()
                             ])
 
     test_transform = A.Compose([
                             A.Resize(args.img_size,args.img_size),
-                            # A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
-                            A.Normalize(mean=(0., 0., 0.), std=(1., 1., 1.), max_pixel_value=255.0, always_apply=False, p=1.0),
+                            A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
                             ToTensorV2()
                             ])
 
@@ -123,14 +116,15 @@ if __name__ == '__main__':
     parser.add_argument('--img_size', type=int, default=380)
     parser.add_argument('--beta', default=1)
     parser.add_argument('--model_generator', default="EfficientNet_B4(50)")
-    # parser.add_argument('--wandb_project_name', default="Untitled-Project")
+    parser.add_argument('--wandb_enable', default=True)
     
-    # print(vars(parser.parse_args()))
     args = TrainArgs(parser.parse_args())
     args_dict = convert_args_to_dict(args)
+
     print('***** echo args *****')
-    for k in args_dict:
-        print(' - ', k, ':', args_dict[k])
+    for k in args_dict : print(' - ', k, ':', args_dict[k])
     print('*********************')
-    init_wandb(args)
+
+    if(args.wandb_enable) : init_wandb(args)
+
     train_and_save(args)

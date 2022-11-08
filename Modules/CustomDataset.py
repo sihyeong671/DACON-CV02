@@ -2,6 +2,7 @@ import cv2
 import torch
 import os
 import albumentations as A
+import numpy as np
 from torch.utils.data import Dataset
 
 class CustomDataset(Dataset):
@@ -68,6 +69,41 @@ class CustomDatasetV2(Dataset):
             label = 'None'
 
         return {'image': image, 'size': size, 'rgb_mean': rgb_mean, 'label': label}
+    
+    def __len__(self):
+        return len(self.img_paths)
+
+class CustomDatasetV3(Dataset):
+    def __init__(self, img_paths, labels, transforms=None):
+        self.img_paths = img_paths
+        self.labels = labels
+        self.transforms = transforms
+
+    def __getitem__(self, index):
+        img_path = self.img_paths[index]
+        img_path = os.path.join('./data', img_path) # 본인 데이터 폴더 위치 확인 필요
+        image = cv2.imread(img_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        h, w, c = image.shape
+
+        input_data = {
+            'image':'None',
+            'size':'None',
+            'rgb_mean':'None',
+            'label':'None',
+        }
+        
+        input_data['image'] = image
+        input_data['rgb_mean'] = image.mean((0,1))
+        input_data['size'] = torch.tensor([h, w])
+        if self.labels is not None:
+            input_data['label'] = self.labels[index]
+
+        if self.transforms is not None:
+            input_data['image'] = self.transforms(image=input_data['image'])['image']
+        
+
+        return input_data
     
     def __len__(self):
         return len(self.img_paths)
