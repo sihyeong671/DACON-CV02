@@ -227,11 +227,11 @@ class FocalLoss(nn.Module):
 
 
 def save_model(model, args:TrainArgs, path: str):
-    version = 'v' + f'{len(glob(path+"_*"))+1}'
+    args.model_generator
     torch.save({
         'model_params': model.state_dict(),
         'args': args
-    }, path+f'_{version}.pth')
+    }, path+f'_{args.model_generator}.pth')
 
 def load_model(args:TestArgs) -> "tuple[torch.nn.Module, TrainArgs]":
     ckpt = torch.load(os.path.join(args.model_weight_path, args.load_weight_name), map_location=args.device) 
