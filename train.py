@@ -9,14 +9,9 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import datetime as dt
 from tqdm import tqdm
-from copy import deepcopy
 
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
-
-# from Modules.Utility import *
-# from Modules.CustomDataset import CustomDatasetV2
-# from Modules.CustomModel import *
 from Modules import *
 
 import wandb
@@ -33,15 +28,13 @@ def train_and_save(args: TrainArgs):
                             A.HorizontalFlip(),
                             A.RandomRotate90(),
                             A.Resize(args.img_size,args.img_size),
-                            # A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
-                            A.Normalize(mean=(0., 0., 0.), std=(1., 1., 1.), max_pixel_value=255.0, always_apply=False, p=1.0),
+                            A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
                             ToTensorV2()
                             ])
 
     test_transform = A.Compose([
                             A.Resize(args.img_size,args.img_size),
-                            # A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
-                            A.Normalize(mean=(0., 0., 0.), std=(1., 1., 1.), max_pixel_value=255.0, always_apply=False, p=1.0),
+                            A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
                             ToTensorV2()
                             ])
 
@@ -103,7 +96,7 @@ def train_and_save(args: TrainArgs):
         wandb.log({"train/tr_loss per epoch":tr_loss, "train/val_loss per epoch":val_loss, "train/f1 score":val_score})
         if scheduler is not None:
             scheduler.step()
-        wandb.watch(model)
+        # wandb.watch(model)
         if best_score < val_score:
             best_score = val_score
             args.save_weight_name = f'{args.epochs}_best_{model.__class__.__name__}'
@@ -114,23 +107,24 @@ if __name__ == '__main__':
     now = dt.datetime.now().strftime('%Y-%m-%d %H.%M.%S')
     print('The training started at ', now)
     parser = argparse.ArgumentParser()
+    parser.add_argument('--seed', type=int, default=653) # 
     parser.add_argument('--start_time', type=str, default=now)
-    parser.add_argument('--epochs', type=int, default=20)
-    parser.add_argument('--scheduler_step', default=20)
+    parser.add_argument('--epochs', type=int, default=70)
+    parser.add_argument('--scheduler_step', default=30)
     parser.add_argument('--step_decay', default=0.1)
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--img_size', type=int, default=380)
     parser.add_argument('--beta', default=1)
     parser.add_argument('--model_generator', default="EfficientNet_B4(50)")
-    # parser.add_argument('--wandb_project_name', default="Untitled-Project")
-    
-    # print(vars(parser.parse_args()))
+    parser.add_argument('--wandb_enable', default=True)
     args = TrainArgs(parser.parse_args())
     args_dict = convert_args_to_dict(args)
+
     print('***** echo args *****')
-    for k in args_dict:
-        print(' - ', k, ':', args_dict[k])
+    for k in args_dict : print(' - ', k, ':', args_dict[k])
     print('*********************')
-    init_wandb(args)
+
+    if(args.wandb_enable) : init_wandb(args)
+
     train_and_save(args)
