@@ -16,6 +16,7 @@ data/*
 */__pycache__/*
 .python-version
 .ipynb_checkpoints
+*.pyc
 
 # macOS + Windows
 .DS_Store
