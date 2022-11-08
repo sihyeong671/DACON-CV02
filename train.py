@@ -28,7 +28,6 @@ def train_and_save(args: TrainArgs):
     train_transform = A.Compose([
                             A.VerticalFlip(),
                             A.HorizontalFlip(),
-                            A.RandomRotate90(),
                             A.Resize(args.img_size,args.img_size),
                             A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
                             # A.Normalize(mean=(0., 0., 0.), std=(1., 1., 1.), max_pixel_value=255.0, always_apply=False, p=1.0),
@@ -130,7 +129,7 @@ def train_and_save(args: TrainArgs):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=80)
+    parser.add_argument('--epochs', type=int, default=70)
     parser.add_argument('--scheduler_step', default=30)
     parser.add_argument('--step_decay', default=0.1)
     parser.add_argument('--lr', type=float, default=0.001)
