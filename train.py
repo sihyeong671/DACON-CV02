@@ -97,8 +97,7 @@ def train_and_save(args: TrainArgs):
             if idx % NUM_ACCUM == 0:
                 optimizer.step()
                 optimizer.zero_grad()
-
-            train_loss.append(loss.item())
+                train_loss.append(loss.item())
 
         tr_loss = np.mean(train_loss)
         train_f1_score = np.mean(train_f1)
@@ -113,7 +112,7 @@ def train_and_save(args: TrainArgs):
         if best_score < train_f1_score:
             best_score = train_f1_score
             args.save_weight_name = f'{args.epochs}_best_{model.__class__.__name__}'
-            save_model(model, args, os.path.join(args.model_weight_path, args.save_weight_name))
+            save_model(model, optimizer, args, os.path.join(args.model_weight_path, args.save_weight_name))
         
     
 if __name__ == '__main__':
