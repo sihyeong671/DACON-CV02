@@ -73,8 +73,6 @@ def train_and_save(args: TrainArgs):
                 # adjust lambda to exactly match pixel ratio
                 lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (img.size()[-1] * img.size()[-2]))
                 # compute output
-                size = size_a * lam + size_b * (1. - lam)
-                rgb_mean = rgb_mean_a * lam + rgb_mean_b * (1. - lam)
                 out_a = model(img, size_a, rgb_mean_a)
                 out_b = model(img, size_b, rgb_mean_b)
 
