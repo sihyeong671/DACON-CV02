@@ -73,6 +73,8 @@ def validation(model, criterion, test_loader, device):
         
     val_f1 = competition_metric(true_labels, model_preds)
     return np.mean(val_loss), val_f1
+
+    
 def auto_set_attribute(obj, args:"dict[str, object]"):
     for key in args:
         if hasattr(obj, key):
@@ -151,10 +153,11 @@ def get_data(args: TrainArgs, sampling: bool = True):
 
         for _ in range(15): # 원하는 만큼 sampling
             train_df_sample = pd.concat([train_df_sample, g.apply(lambda x: x.sample(21))])
+
     else:
         train_df_sample = df
         
-    return train_df_sample.img_path.values, train_df_sample.artist.values, # type: ignore
+    return train_df_sample.img_path.values, train_df_sample.artist.values
 
 
 def rand_bbox(size, lam):
@@ -271,8 +274,8 @@ def get_acc_and_f1(out_a: torch.Tensor, out_b: torch.Tensor, label_a: torch.Tens
     train_f1_a = competition_metric(target_a_lst, model_preds_a) * lam
     train_f1_b = competition_metric(target_b_lst, model_preds_b) * (1. - lam)
 
-    train_acc_a = (label_a==out_a.argmax(1)).sum().item() * lam
-    train_acc_b = (label_b==out_b.argmax(1)).sum().item() * (1. - lam)
+    train_acc_a = ((label_a==out_a.argmax(1)).sum().item() / out_a.size(0)) * lam
+    train_acc_b = ((label_b==out_b.argmax(1)).sum().item() / out_b.size(0)) * (1. - lam)
 
     train_f1 = train_f1_a + train_f1_b
     train_acc = train_acc_a + train_acc_b

@@ -97,8 +97,7 @@ def train_and_save(args: TrainArgs):
             if idx % NUM_ACCUM == 0:
                 optimizer.step()
                 optimizer.zero_grad()
-
-            train_loss.append(loss.item())
+                train_loss.append(loss.item())
 
         tr_loss = np.mean(train_loss)
         train_f1_score = np.mean(train_f1)
