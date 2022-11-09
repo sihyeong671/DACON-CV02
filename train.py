@@ -32,11 +32,6 @@ def train_and_save(args: TrainArgs):
                             ToTensorV2()
                             ])
 
-    test_transform = A.Compose([
-                            A.Resize(args.img_size,args.img_size),
-                            A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255.0, always_apply=False, p=1.0),
-                            ToTensorV2()
-                            ])
 
     train_dataset = CustomDatasetV2(train_df_path, train_df_label, train_transform)
     train_loader = DataLoader(train_dataset, batch_size = args.batch_size, shuffle=True, num_workers=2)
@@ -79,8 +74,6 @@ def train_and_save(args: TrainArgs):
                 # adjust lambda to exactly match pixel ratio
                 lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (img.size()[-1] * img.size()[-2]))
                 # compute output
-                size = size_a * lam + size_b * (1. - lam)
-                rgb_mean = rgb_mean_a * lam + rgb_mean_b * (1. - lam)
                 out_a = model(img, size_a, rgb_mean_a)
                 out_b = model(img, size_b, rgb_mean_b)
 
@@ -103,8 +96,7 @@ def train_and_save(args: TrainArgs):
             if idx % NUM_ACCUM == 0:
                 optimizer.step()
                 optimizer.zero_grad()
-
-            train_loss.append(loss.item())
+                train_loss.append(loss.item())
 
         tr_loss = np.mean(train_loss)
         train_f1_score = np.mean(train_f1)
@@ -119,7 +111,7 @@ def train_and_save(args: TrainArgs):
         if best_score < train_f1_score:
             best_score = train_f1_score
             args.save_weight_name = f'{args.epochs}_best_{model.__class__.__name__}'
-            save_model(model, args, os.path.join(args.model_weight_path, args.save_weight_name))
+            save_model(model, optimizer, args, os.path.join(args.model_weight_path, args.save_weight_name))
         
     
 if __name__ == '__main__':
