@@ -95,8 +95,8 @@ def train_and_save(args: TrainArgs):
             loss.backward()
 
             if idx % NUM_ACCUM == 0:
-                optimizer.zero_grad()
                 optimizer.step()
+                optimizer.zero_grad()
 
             train_loss.append(loss.item())
 
