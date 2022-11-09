@@ -54,16 +54,16 @@ def train_and_save(args: TrainArgs):
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=args.scheduler_step, gamma=args.step_decay)
 
     best_score = 0
-    best_loss = np.inf
     best_model = None
 
     es_check = 0
     es_limit = 7
     
+    NUM_ACCUM = 2
     for epoch in range(1, args.epochs+1):
         model.train()
         train_loss = []
-        for data in tqdm(train_loader):
+        for idx, data in enumerate(tqdm(train_loader)):
             img = data['image'].float().to(args.device)
             label = data['label'].to(args.device)
             rgb_mean = data['rgb_mean'].float().to(args.device)
@@ -87,8 +87,6 @@ def train_and_save(args: TrainArgs):
                 # adjust lambda to exactly match pixel ratio
                 lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (img.size()[-1] * img.size()[-2]))
                 # compute output
-                size = size_a * lam + size_b * (1. - lam)
-                rgb_mean = rgb_mean_a * lam + rgb_mean_b * (1. - lam)
                 outs_a = model(img, size_a, rgb_mean_a)
                 outs_b = model(img, size_b, rgb_mean_b)
                 loss = criterion(outs_a, target_a) * lam + criterion(outs_b, target_b) * (1. - lam)
@@ -96,10 +94,11 @@ def train_and_save(args: TrainArgs):
                 outs = model(img, size, rgb_mean)
                 loss = criterion(outs, label)
 
-
-            optimizer.zero_grad()
             loss.backward()
-            optimizer.step()
+            
+            if idx % NUM_ACCUM == 0:
+                optimizer.step()
+                optimizer.zero_grad()
 
             train_loss.append(loss.item())
 
@@ -130,11 +129,11 @@ def train_and_save(args: TrainArgs):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=80)
+    parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--scheduler_step', default=30)
     parser.add_argument('--step_decay', default=0.1)
     parser.add_argument('--lr', type=float, default=0.001)
-    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--seed', type=int, default=999)
     parser.add_argument('--img_size', type=int, default=380)
     parser.add_argument('--device', default='cuda')
