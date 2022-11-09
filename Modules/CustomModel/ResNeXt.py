@@ -4,10 +4,10 @@ from torchvision import models
 import timm
 
 
-class ResNeXt101(nn.Module):
+class ResNeXt50(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
-        self.backbone = timm.create_model('resnext101_32x8d', pretrained=True)
+        self.backbone = timm.create_model('resnext50d_32x4d', pretrained=True)
         self.backbone.fc = nn.Sequential()
         self.drop = nn.Dropout(0.4, inplace=True)
 
