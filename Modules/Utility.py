@@ -223,12 +223,13 @@ class FocalLoss(nn.Module):
         )
 
 
-def save_model(model, args:TrainArgs, path: str):
+def save_model(model, optim, args:TrainArgs, path: str):
     
     os.makedirs(args.local_path, exist_ok=True)
 
     torch.save({
         'model_params': model.state_dict(),
+        'optim_params': optim.state_dict(),
         'args': args
     }, path+f'_{args.model_generator}.pth')
 
