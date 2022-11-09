@@ -131,7 +131,7 @@ if __name__ == '__main__':
     parser.add_argument('--scheduler_step', default=30)
     parser.add_argument('--step_decay', default=0.1)
     parser.add_argument('--lr', type=float, default=0.001)
-    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--img_size', type=int, default=224)
     parser.add_argument('--beta', default=1)
     parser.add_argument('--model_generator', default="MaxViT_SC(50)")
@@ -146,3 +146,5 @@ if __name__ == '__main__':
     if(args.wandb_enable) : init_wandb(args)
 
     train_and_save(args)
+
+# python train.py --model_generator="MaxViT_Base(50)";python train.py --model_generator="MaxViT_S(50)";python train.py --model_generator="MaxViT_C(50)";python train.py --model_generator="MaxViT_SC(50)"
