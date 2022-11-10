@@ -63,6 +63,7 @@ if __name__ == '__main__':
     print('*********************')
     model, train_args = load_model(test_args)
     print('> ***** echo loaded train_args *****')
+    args_dict = convert_args_to_dict(train_args)
     for k in args_dict:
         print('>  - ', k, ':', args_dict[k])
     print('> *********************')
