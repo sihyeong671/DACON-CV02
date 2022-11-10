@@ -292,8 +292,8 @@ def get_acc_and_f1(outs: torch.Tensor, label_a: torch.Tensor, label_b: torch.Ten
     train_f1_a = competition_metric(label_a_lst, model_preds) * lam
     train_f1_b = competition_metric(label_b_lst, model_preds) * (1. - lam)
 
-    train_acc_a = ((label_a==model_preds.argmax(1)).sum().item() / model_preds.size(0)) * lam
-    train_acc_b = ((label_b==model_preds.argmax(1)).sum().item() / model_preds.size(0)) * (1. - lam)
+    train_acc_a = ((label_a==outs.argmax(1)).sum().item() / outs.size(0)) * lam
+    train_acc_b = ((label_b==outs.argmax(1)).sum().item() / outs.size(0)) * (1. - lam)
 
     train_f1 = train_f1_a + train_f1_b
     train_acc = train_acc_a + train_acc_b
