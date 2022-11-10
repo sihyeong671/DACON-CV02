@@ -1,0 +1,52 @@
+artist:
+  0: Albrecht Du rer
+  1: Alfred Sisley
+  2: Amedeo Modigliani
+  3: Andrei Rublev
+  4: Andy Warhol
+  5: Camille Pissarro
+  6: Caravaggio
+  7: Claude Monet
+  8: Diego Rivera
+  9: Diego Velazquez
+  10: Edgar Degas
+  11: Edouard Manet
+  12: Edvard Munch
+  13: El Greco
+  14: Eugene Delacroix
+  15: Francisco Goya
+  16: Frida Kahlo
+  17: Georges Seurat
+  18: Giotto di Bondone
+  19: Gustav Klimt
+  20: Gustave Courbet
+  21: Henri Matisse
+  22: Henri Rousseau
+  23: Henri de Toulouse-Lautrec
+  24: Hieronymus Bosch
+  25: Jackson Pollock
+  26: Jan van Eyck
+  27: Joan Miro
+  28: Kazimir Malevich
+  29: Leonardo da Vinci
+  30: Marc Chagall
+  31: Michelangelo
+  32: Mikhail Vrubel
+  33: Pablo Picasso
+  34: Paul Cezanne
+  35: Paul Gauguin
+  36: Paul Klee
+  37: Peter Paul Rubens
+  38: Pierre-Auguste Renoir
+  39: Piet Mondrian
+  40: Pieter Bruegel
+  41: Raphael
+  42: Rembrandt
+  43: Rene Magritte
+  44: Salvador Dali
+  45: Sandro Botticelli
+  46: Titian
+  47: Vasiliy Kandinskiy
+  48: Vincent van Gogh
+  49: William Turner
+model_path: ../local/45_best_ResNeXt50_ResNeXt50(50)_size_rgb.pth
