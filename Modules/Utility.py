@@ -264,7 +264,7 @@ def init_wandb(train_args:TrainArgs, test_args = None):  # type: ignore
     wandb.init(project=train_args.wandb_project_name, entity=train_args.wandb_entity_name, name=train_args.wandb_run_name, config=config)
     wandb.config = convert_args_to_dict(train_args)
     
-def get_acc_and_f1(out_a: torch.Tensor, out_b: torch.Tensor, label_a: torch.Tensor, label_b: torch.Tensor, lam: float) -> tuple([int, int]):
+def get_acc_and_f1_ab(out_a: torch.Tensor, out_b: torch.Tensor, label_a: torch.Tensor, label_b: torch.Tensor, lam: float) -> tuple([int, int]):
     
     target_a_lst = label_a.detach().cpu().numpy().tolist()
     target_b_lst = label_b.detach().cpu().numpy().tolist()
@@ -283,3 +283,19 @@ def get_acc_and_f1(out_a: torch.Tensor, out_b: torch.Tensor, label_a: torch.Tens
 
     return train_f1, train_acc
 
+def get_acc_and_f1(outs: torch.Tensor, label_a: torch.Tensor, label_b: torch.Tensor, lam: float) -> tuple([int, int]):
+    
+    model_preds = outs.argmax(1).detach().cpu().numpy().tolist()
+    label_a_lst = label_a.detach().cpu().numpy().tolist()
+    label_b_lst = label_b.detach().cpu().numpy().tolist()
+
+    train_f1_a = competition_metric(label_a_lst, model_preds) * lam
+    train_f1_b = competition_metric(label_b_lst, model_preds) * (1. - lam)
+
+    train_acc_a = ((label_a==model_preds.argmax(1)).sum().item() / model_preds.size(0)) * lam
+    train_acc_b = ((label_b==model_preds.argmax(1)).sum().item() / model_preds.size(0)) * (1. - lam)
+
+    train_f1 = train_f1_a + train_f1_b
+    train_acc = train_acc_a + train_acc_b
+
+    return train_f1, train_acc

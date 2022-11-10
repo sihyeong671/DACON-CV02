@@ -64,29 +64,37 @@ def train_and_save(args: TrainArgs):
 
                 target_a = label
                 target_b = label[rand_index]
-                size_a = size
-                size_b = size[rand_index]
-                rgb_mean_a = rgb_mean
-                rgb_mean_b = rgb_mean[rand_index]
+                # size_a = size
+                # size_b = size[rand_index]
+                # rgb_mean_a = rgb_mean
+                # rgb_mean_b = rgb_mean[rand_index]
 
                 bbx1, bby1, bbx2, bby2 = rand_bbox(img.size(), lam)
                 img[:, :, bbx1:bbx2, bby1:bby2] = img[rand_index, :, bbx1:bbx2, bby1:bby2]
                 # adjust lambda to exactly match pixel ratio
                 lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (img.size()[-1] * img.size()[-2]))
-                # compute output
-                out_a = model(img, size_a, rgb_mean_a)
-                out_b = model(img, size_b, rgb_mean_b)
 
-                train_f1_item, train_acc_item = get_acc_and_f1(out_a, out_b, target_a, target_b, lam)
+                outs = model(img, size, rgb_mean)
+                
+                train_f1_item, train_acc_item = get_acc_and_f1(outs, target_a, target_b, lam)
+                loss = criterion(outs, target_a) * lam + criterion(outs, target_b) * (1. - lam)
+                # compute output
+                # out_a = model(img, size_a, rgb_mean_a)
+                # out_b = model(img, size_b, rgb_mean_b)
+
+                # train_f1_item, train_acc_item = get_acc_and_f1_ab(out_a, out_b, target_a, target_b, lam)
                 
                 train_f1.append(train_f1_item)
                 train_acc.append(train_acc_item)
 
-                loss = criterion(out_a, target_a) * lam + criterion(out_b, target_b) * (1. - lam)
+                # loss = criterion(out_a, target_a) * lam + criterion(out_b, target_b) * (1. - lam)
             else:
                 outs = model(img, size, rgb_mean)
                 model_preds = outs.argmax(1).detach().cpu().numpy().tolist()
                 label_lst = label.detach().cpu().numpy().tolist()
+
+                train_acc_item = ((label==outs.argmax(1)).sum().item() / outs.size(0))
+                train_acc.append(train_acc_item)
                 train_f1_item = competition_metric(label_lst, model_preds)
                 train_f1.append(train_f1_item)
                 loss = criterion(outs, label)
@@ -120,14 +128,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=653) # 
     parser.add_argument('--start_time', type=str, default=now)
-    parser.add_argument('--epochs', type=int, default=45)
+    parser.add_argument('--epochs', type=int, default=40)
     parser.add_argument('--scheduler_step', default=30)
     parser.add_argument('--step_decay', default=0.1)
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--img_size', type=int, default=380)
     parser.add_argument('--beta', default=1)
-    parser.add_argument('--model_generator', default="EfficientNet_B4_non_rgb(50)")
+    parser.add_argument('--model_generator', default="EfficientNet_B4_non_size(50)")
     parser.add_argument('--wandb_enable', default=True)
     args = TrainArgs(parser.parse_args())
     args_dict = convert_args_to_dict(args)
