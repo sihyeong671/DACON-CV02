@@ -30,7 +30,7 @@ class ResNeXt50(nn.Module):
         )
 
         self.clf = nn.Sequential(
-            nn.Linear(2048+256+256, 1024, bias=False),
+            nn.Linear(2048, 1024, bias=False),
             nn.BatchNorm1d(1024),
             nn.LeakyReLU(0.2),
             nn.Dropout(0.4, inplace=True),

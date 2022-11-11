@@ -9,7 +9,8 @@ from Modules import *
 def voting(inputs):
     artist = np.zeros(50)
     for input in inputs:
-        input = list(map(float, input[1:-2].split(', ')))
+        input = list(map(float, input[1:-1].split(', ')))
+
         artist += np.array(input)
     
     return artist.argmax()

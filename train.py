@@ -128,7 +128,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--img_size', type=int, default=380)
     parser.add_argument('--beta', default=1)
-    parser.add_argument('--model_generator', default="resnext50(50)")
+    parser.add_argument('--model_generator', default="ResNeXt50(50)")
     parser.add_argument('--wandb_enable', default=True)
     args = TrainArgs(parser.parse_args())
     args_dict = convert_args_to_dict(args)

@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', type=int, default=128)
-    parser.add_argument('--load_weight_name', default='20_best_EfficientNet_B4_v1.pth')
+    parser.add_argument('--load_weight_name', default='45_best_ResNeXt50(50)_base.pth')
 
     test_args = TestArgs(parser.parse_args())
     args_dict = convert_args_to_dict(test_args)
@@ -66,5 +66,5 @@ if __name__ == '__main__':
     for k in args_dict:
         print('>  - ', k, ':', args_dict[k])
     print('> *********************')
-    init_wandb(train_args, test_args)
+    # init_wandb(train_args, test_args)
     inference_and_save(model, train_args, test_args)
