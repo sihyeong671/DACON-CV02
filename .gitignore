@@ -1,6 +1,5 @@
 
 open.zip
-*.csv
 *.tar
 
 # wandb
