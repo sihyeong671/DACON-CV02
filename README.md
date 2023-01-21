@@ -46,6 +46,8 @@ undersampling하기에는 데이터 수가 너무 적다고 판단하여 oversam
 - SwinT
 - RegNet
 
+최종적으로 위 모델들로 나온 결과를 softvoting을 한 결과를 제출해서 가장 좋은 성능이 나왔습니다.
+
 ### Data Augmentation
 train, test그림 확인시 현실에서 아무렇게나 찍은 사진이 아닌 디지털로 변환하여 정형화된(같은 그림이면 이미지 rgb값이 전부 같은 데이터 의미)데이터로 판단하여 색상을 바꾸거나 이미지 정보를 심각하게 훼손하는 augmentation으로 사용하지 않았습니다.
 - VerticalFlip
